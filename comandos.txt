@@ -1,0 +1,12 @@
+1. cargar|<nombre_archivo>|Carga datos de un objeto desde <nombre_archivo>.
+2. listado||Muestra los objetos cargados y su informacion basica.
+3. envolvente|<nombre_objeto>|Calcula la caja envolvente de <nombre_objeto>. La caja se define por los puntos extremos que abarcan el objeto.
+4. descargar|<nombre_objeto>|Descarga informacion basica del objeto <nombre_objeto>.
+5. guardar|<nombre_objeto> <nombre_archivo>|Guarda informacion del objeto <nombre_objeto> en <nombre_archivo>.
+6. v_cercano|<px> <py> <pz> <nombre_objeto>|Encuentra el vertice más cercano de <nombre_objeto> al punto dado <px>, <py>, <pz>.
+7. v_cercanos_caja|<nombre_objeto>|Encuentra vertices de <nombre_objeto> mas cercanos a los puntos de la caja envolvente del objeto.
+8. ruta_corta|<i1> <i2> <nombre_objeto>|Encuentra la ruta mas corta entre los vertices <i1> e <i2> en <nombre_objeto>.
+9. ruta_corta_centro|<i1> <nombre_objeto>|Encuentra la ruta mas corta entre el vertice <i1> y el centro de <nombre_objeto>.
+10. ayuda||Mostrar ayuda de los comandos.
+11. clear||Borra Pantalla
+12. salir||Termina la ejecucion de la aplicacion.
