@@ -103,6 +103,16 @@ void Objeto::leerVertices() const
     }
 }
 
+std::vector<Vertice*> Objeto::getVerticePtr()
+{
+    std::vector<Vertice*> verticesPtr;
+    for (Vertice& vertice : vertices)
+    {
+        verticesPtr.push_back(&vertice);
+    }
+    return verticesPtr;
+}
+
 //Método para calcular las aristas de un objeto
 void Objeto::calcularAristas()
 {

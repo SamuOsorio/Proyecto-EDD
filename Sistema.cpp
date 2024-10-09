@@ -8,6 +8,8 @@ Tomas Ospina e Ivan Cortés
 #include "Objeto.h"
 #include "GestorObjetos.h"
 #include "Comando.h"
+#include "ArbolKD.h"
+#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -261,6 +263,8 @@ void Sistema::cargarArchivo(const std::string& nombreArchivo)
     // Crea la instancia de un nuevo Objeto
     Objeto nuevoObjeto(meshName);
 
+    std::vector<Vertice*> verticesPtr;
+
     //Agrega los vertices del objeto
     for(int i=0; i< numVertice; i++)
     {
@@ -271,8 +275,11 @@ void Sistema::cargarArchivo(const std::string& nombreArchivo)
             std::cout << "Error al leer el archivo " << nombreArchivo << " en las coordenadas." << std::endl;
             return;
         }
-        Vertice nuevoVertice(x,y,z);
-        nuevoObjeto.agregarVertice(nuevoVertice);
+
+        Vertice* nuevoVertice = new Vertice(x,y,z);
+        nuevoObjeto.agregarVertice(*nuevoVertice);
+
+        verticesPtr.push_back(nuevoVertice);
     }
 
     //Agrega las caras del objeto y sus indices
@@ -322,6 +329,8 @@ void Sistema::cargarArchivo(const std::string& nombreArchivo)
     {
         std::cerr << "Error: El objeto " << meshName << " no se pudo cargar. "<< std::endl;
     }
+
+    ArbolKD arbolKD(verticesPtr);
 }
 
 // Método para listar objetos -- Muestra los objetos y su informacion cargados en memoria
@@ -439,75 +448,109 @@ void Sistema::generarEnvolventeGlobal()
 void Sistema::descargarObjeto(const std::string& nombreObjeto)
 {
     //Obtener el objeto desde el gestor usando su nombre
-       Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
-       if (objeto == nullptr)
-       {
-           std::cout << "El objeto " << nombreObjeto << " no ha sido cargado en memoria." << std::endl;
-           return;
-       }
+    Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
+    if (objeto == nullptr)
+    {
+        std::cout << "El objeto " << nombreObjeto << " no ha sido cargado en memoria." << std::endl;
+        return;
+    }
 
     //Elimina el objeto dado su nombre
-       bool bandera = gestor.descargarObjeto(nombreObjeto);
-       if(bandera == true)
-       {
-           std::cout << "El objeto " << nombreObjeto << " ha sido eliminado de la memoria de trabajo." << std::endl;
-       }
-       else
-       {
-           std::cout << "El objeto " << nombreObjeto << " no ha sido cargado en memoria." << std::endl;
-       }
+    bool bandera = gestor.descargarObjeto(nombreObjeto);
+    if(bandera == true)
+    {
+        std::cout << "El objeto " << nombreObjeto << " ha sido eliminado de la memoria de trabajo." << std::endl;
+    }
+    else
+    {
+        std::cout << "El objeto " << nombreObjeto << " no ha sido cargado en memoria." << std::endl;
+    }
 }
 
 // Método para guardar un objeto en un archivo .txt -- Crea un archivo.txt y guarda el objeto con su información
 void Sistema::guardarObjeto(const std::string& nombreObjeto, const std::string& nombreArchivo)
 {
     //Obtener el objeto desde el gestor usando su nombre
-       Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
-       if (objeto == nullptr)
-       {
-           std::cout << "El objeto " << nombreObjeto << " no ha sido cargado en memoria." << std::endl;
-           return;
-       }
+    Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
+    if (objeto == nullptr)
+    {
+        std::cout << "El objeto " << nombreObjeto << " no ha sido cargado en memoria." << std::endl;
+        return;
+    }
 
-       std::ofstream archivo(nombreArchivo);
-       if (!archivo)
-       {
-           std::cerr << "Error al abrir el archivo " << nombreArchivo << " para escritura." << std::endl;
-           return;
-       }
+    std::ofstream archivo(nombreArchivo);
+    if (!archivo)
+    {
+        std::cerr << "Error al abrir el archivo " << nombreArchivo << " para escritura." << std::endl;
+        return;
+    }
 
     //Agrega la informacion al archivo
-       archivo << nombreObjeto << std::endl;
-       archivo << objeto->getCantidadVertices()<<std::endl;
-	   std::vector<Vertice> vertices = objeto->getVertices();
-       for (int i = 0; i < objeto->getCantidadVertices(); i++)
-       {
-           archivo << vertices[i].getX() << " " << vertices[i].getY() << " " << vertices[i].getZ() << std::endl;
-       }
-       for (const auto& cara : objeto->getCaras())
-       {
-           archivo << cara.getVertices().size()<< " ";
-           for (const auto& indice : cara.getVertices())
-           {
-               archivo << indice << " ";
-           }
-           archivo << std::endl;
-       }
-       archivo << "-1" << std::endl;
-       archivo.close();
-       std::cout << "La informacion del objeto " << nombreObjeto << " ha sido guardada exitosamente en el archivo " << nombreArchivo << "." << std::endl;
+    archivo << nombreObjeto << std::endl;
+    archivo << objeto->getCantidadVertices()<<std::endl;
+    std::vector<Vertice> vertices = objeto->getVertices();
+    for (int i = 0; i < objeto->getCantidadVertices(); i++)
+    {
+        archivo << vertices[i].getX() << " " << vertices[i].getY() << " " << vertices[i].getZ() << std::endl;
+    }
+    for (const auto& cara : objeto->getCaras())
+    {
+        archivo << cara.getVertices().size()<< " ";
+        for (const auto& indice : cara.getVertices())
+        {
+            archivo << indice << " ";
+        }
+        archivo << std::endl;
+    }
+    archivo << "-1" << std::endl;
+    archivo.close();
+    std::cout << "La informacion del objeto " << nombreObjeto << " ha sido guardada exitosamente en el archivo " << nombreArchivo << "." << std::endl;
 }
 
 // Método para obtener el vertice más cercano
 void Sistema::verticeMasCercano(float px, float py, float pz, const std::string& nombreObjeto)
 {
-    /*
-       Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
-       if (objeto == nullptr)
-       {
-           std::cout << "El objeto " << nombreObjeto << " no ha sido cargado en memoria." << std::endl;
-           return;
-       }*/
+    Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
+    if (objeto == nullptr)
+    {
+        std::cout << "El objeto " << nombreObjeto << " no ha sido cargado en memoria." << std::endl;
+        return;
+    }
+
+    std::vector<Vertice*> vertice = objeto->getVerticePtr();
+
+    if(vertice.empty())
+    {
+        std::cout << "(Error) El objeto " << nombreObjeto << " no tiene vértices." << std::endl;
+        return;
+    }
+    Vertice punto(px, py, pz);
+    ArbolKD arbol(vertice);
+    Vertice* verticeCercano = arbol.VerticeMasCercano(punto,nombreObjeto);
+
+    if (verticeCercano != nullptr)
+    {
+        float distancia = arbol.distanciaEuclidiana(punto, *verticeCercano);
+        auto it = std::find_if(vertice.begin(), vertice.end(),
+                               [verticeCercano](const Vertice* v)
+        {
+            return v == verticeCercano;
+        });
+        if (it != vertice.end())
+        {
+            int indice = std::distance(vertice.begin(), it);
+            std::cout << "El vertice " << indice
+                      << " (" << verticeCercano->getX() << ", " << verticeCercano->getY() << ", " << verticeCercano->getZ()
+                      << ") del objeto " << nombreObjeto << " es el más cercano al punto ("
+                      << px << ", " << py << ", " << pz
+                      << "), a una distancia de " << distancia << "." << std::endl;
+        }
+    }
+    else
+    {
+        std::cout << "No se encontró un vértice cercano." << std::endl;
+    }
+
 }
 
 // Método para obtener el vertice mas cercano global

@@ -33,6 +33,8 @@ public:
     const std::vector<Vertice>& getVertices() const;
     const std::vector<Cara>& getCaras() const;
     void calcularAristas();
+    std::vector<Vertice*> getVerticePtr();
+    
 
 private:
     std::string nombreMalla;
