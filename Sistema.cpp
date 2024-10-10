@@ -610,13 +610,9 @@ void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
 
     for (auto vertice : todosLosVertices)
     {
-        delete vertice;
-    }
-}
-
-void Sistema::verticesCercanosCaja(const std::string& nombreObjeto)
+        delete void Sistema::verticesCercanosCaja(const std::string& nombreObjeto)
 {
-    std::cout << "Intentando buscar el objeto: " << nombreObjeto << std::endl;
+    // Obtener el objeto desde el gestor usando su nombre
     Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
     if (objeto == nullptr)
     {
@@ -624,57 +620,81 @@ void Sistema::verticesCercanosCaja(const std::string& nombreObjeto)
         return;
     }
 
+    // Obtener los vértices del objeto
     std::vector<Vertice> vertices = objeto->getVertices();
-    std::cout << "Se obtuvieron " << vertices.size() << " vertices." << std::endl;
     if (vertices.empty())
     {
-        std::cout << "El objeto " << nombreObjeto << " no tiene vertices." << std::endl;
+        std::cout << "El objeto " << nombreObjeto << " no tiene vértices." << std::endl;
         return;
     }
 
-    float xMin, yMin, zMin, xMax, yMax, zMax;
-    std::cout << "Ingrese las coordenadas de la caja:\n";
-    std::cout << "Punto minimo (xMin, yMin, zMin): ";
-    std::cin >> xMin >> yMin >> zMin;
-    std::cout << "Punto maximo (xMax, yMax, zMax): ";
-    std::cin >> xMax >> yMax >> zMax;
+    // Inicializar los puntos mínimos y máximos con el primer vértice
+    Vertice pmin = vertices[0];
+    Vertice pmax = vertices[0];
 
-    std::cout << "Punto minimo: (" << xMin << ", " << yMin << ", " << zMin << ")" << std::endl;
-    std::cout << "Punto maximo: (" << xMax << ", " << yMax << ", " << zMax << ")" << std::endl;
-
-    std::vector<Vertice> verticesDentroCaja;
-
+    // Iterar sobre los vértices para encontrar los límites de la caja envolvente
     for (const auto& vertice : vertices)
     {
-        std::cout << "Verificando vertice: (" << vertice.getX() << ", " << vertice.getY() << ", " << vertice.getZ() << ")" << std::endl;
-        if (vertice.getX() >= xMin && vertice.getX() <= xMax &&
-            vertice.getY() >= yMin && vertice.getY() <= yMax &&
-            vertice.getZ() >= zMin && vertice.getZ() <= zMax)
-        {
-            verticesDentroCaja.push_back(vertice);
-            std::cout << "Vertice dentro de la caja: (" << vertice.getX() << ", " << vertice.getY() << ", " << vertice.getZ() << ")" << std::endl;
-        }
+        if (vertice.getX() < pmin.getX()) pmin.setX(vertice.getX());
+        if (vertice.getY() < pmin.getY()) pmin.setY(vertice.getY());
+        if (vertice.getZ() < pmin.getZ()) pmin.setZ(vertice.getZ());
+
+        if (vertice.getX() > pmax.getX()) pmax.setX(vertice.getX());
+        if (vertice.getY() > pmax.getY()) pmax.setY(vertice.getY());
+        if (vertice.getZ() > pmax.getZ()) pmax.setZ(vertice.getZ());
     }
 
-    if (verticesDentroCaja.empty())
+    // Crear un nuevo objeto para la caja envolvente
+    std::string nombreEnvolvente = "env_" + nombreObjeto;
+    Objeto envolvente(nombreEnvolvente);
+
+    // Agregar los puntos mínimos y máximos como vértices de la envolvente
+    envolvente.agregarVertice(pmin.getX(), pmin.getY(), pmin.getZ());
+    envolvente.agregarVertice(pmax.getX(), pmax.getY(), pmax.getZ());
+
+    // Agregar la envolvente al gestor
+    gestor.agregarObjeto(envolvente);
+    std::cout << "La caja envolvente del objeto " << nombreObjeto << " se ha generado con el nombre " << nombreEnvolvente << " y se ha agregado a los objetos en memoria.\n" << std::endl;
+
+    // Obtener los vértices de la envolvente
+    std::vector<Vertice> verticesEnvolvente = envolvente.getVertices();
+    if (verticesEnvolvente.empty())
     {
-        std::cout << "No se encontraron vertices dentro de la caja." << std::endl;
+        std::cout << "La envolvente no tiene vértices." << std::endl;
+        return;
     }
-    else
+
+    // Iterar sobre los vértices del objeto original para encontrar el vértice más cercano en la envolvente
+    for (const auto& vertice : vertices)
     {
-        std::cout << "Vertices encontrados dentro de la caja:\n";
-        std::cout << "--------------------------------------------------" << std::endl;
-        for (size_t i = 0; i < verticesDentroCaja.size(); ++i)
+        Vertice* verticeCercano = nullptr;
+        float distanciaMinima = std::numeric_limits<float>::max();
+
+        for (const auto& verticeEnv : verticesEnvolvente)
         {
-            const auto& vertice = verticesDentroCaja[i];
-            std::cout << "Vertice " << i + 1 << ": ("
-                      << vertice.getX() << ", "
-                      << vertice.getY() << ", "
-                      << vertice.getZ() << ")\n";
+            float distancia = sqrt(pow(vertice.getX() - verticeEnv.getX(), 2) +
+                                   pow(vertice.getY() - verticeEnv.getY(), 2) +
+                                   pow(vertice.getZ() - verticeEnv.getZ(), 2));
+
+            if (distancia < distanciaMinima)
+            {
+                distanciaMinima = distancia;
+                verticeCercano = new Vertice(verticeEnv);
+            }
         }
-        std::cout << "--------------------------------------------------" << std::endl;
+
+        if (verticeCercano != nullptr)
+        {
+            std::cout << "El vértice del objeto (" << vertice.getX() << ", " << vertice.getY() << ", " << vertice.getZ()
+                      << ") tiene el vértice más cercano en la envolvente en ("
+                      << verticeCercano->getX() << ", " << verticeCercano->getY() << ", " << verticeCercano->getZ()
+                      << ") con una distancia de " << distanciaMinima << "." << std::endl;
+
+            delete verticeCercano; // Liberar memoria
+        }
     }
 }
+
 
 
 // Método para encontrar la ruta corta de un objeto
