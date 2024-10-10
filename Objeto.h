@@ -34,7 +34,7 @@ public:
     const std::vector<Cara>& getCaras() const;
     void calcularAristas();
     std::vector<Vertice*> getVerticePtr();
-    
+
 
 private:
     std::string nombreMalla;

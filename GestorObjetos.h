@@ -18,6 +18,7 @@ public:
     void mostrarObjetos() const;
     bool verificarObjeto(const std::string& mesh);
     Objeto* obtenerObjeto(const std::string& nombre);
+    std::vector<Objeto>& obtenerObjetos();
     std::vector<Vertice> obtenerTodosLosVertices() const;
     bool estaVacio() const;
     bool descargarObjeto(const std::string& nombre);

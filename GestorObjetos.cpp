@@ -42,6 +42,11 @@ Objeto* GestorObjetos::obtenerObjeto(const std::string& nombre) {
     return nullptr;
 }
 
+// Método para obtener todos los objetos cargados en memoria
+std::vector<Objeto>& GestorObjetos::obtenerObjetos() {
+    return objetos; // Retorna una referencia al vector de objetos
+}
+
 // Método para implementar la función obtenerTodosLosVertices
 std::vector<Vertice> GestorObjetos::obtenerTodosLosVertices() const {
     std::vector<Vertice> todosLosVertices;  // Vector que almacena todos los vértices

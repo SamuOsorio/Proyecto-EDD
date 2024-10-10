@@ -560,6 +560,58 @@ void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
     {
         std::cout << "Ningún objeto ha sido cargado en memoria." << std::endl;
     }
+
+    std::vector<Vertice*> todosLosVertices;
+    std::vector<Objeto> objetos = gestor.obtenerObjetos();
+    std::string nombreObjetoCercano;
+    Vertice* verticeCercano = nullptr;
+
+    for(const auto& objeto : objetos)
+    {
+        const std::vector<Vertice>& vertices = objeto.getVertices();
+        for(const auto& vertice : vertices)
+        {
+            todosLosVertices.push_back(new Vertice(vertice));
+        }
+    }
+
+    if(todosLosVertices.empty())
+    {
+        std::cout << "No hay vértices cargados en ningún objeto." << std::endl;
+        return;
+    }
+
+    Vertice punto(px,py,pz);
+    ArbolKD arbol(todosLosVertices);
+
+    verticeCercano = arbol.VerticeMasCercano(punto, "global");
+    float distancia = arbol.distanciaEuclidiana(punto, *verticeCercano);
+    for (const auto& objeto : objetos) {
+        const std::vector<Vertice>& vertices = objeto.getVertices();
+        auto it = std::find_if(vertices.begin(), vertices.end(), [&](const Vertice& v) {
+            return v.getX() == verticeCercano->getX() &&
+                   v.getY() == verticeCercano->getY() &&
+                   v.getZ() == verticeCercano->getZ();
+        });
+
+        if (it != vertices.end()) {
+            nombreObjetoCercano = objeto.getNombreMalla();
+            int indiceVertice = std::distance(vertices.begin(), it);
+
+            // Mostrar mensaje de éxito con el vértice más cercano
+            std::cout << "El vertice " << indiceVertice
+                      << " (" << verticeCercano->getX() << ", " << verticeCercano->getY() << ", "
+                      << verticeCercano->getZ() << ") del objeto " << nombreObjetoCercano
+                      << " es el mas cercano al punto (" << px << ", " << py << ", " << pz
+                      << "), a una distancia de " << distancia << "." << std::endl;
+            break;
+        }
+    }
+
+    for (auto vertice : todosLosVertices)
+    {
+        delete vertice;
+    }
 }
 
 // Método para obtener el vertice mas cercano de la caja
