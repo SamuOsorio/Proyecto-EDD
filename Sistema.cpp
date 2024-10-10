@@ -1,7 +1,7 @@
 /*
 Proyecto Estructura de Datos 24-3
 Samuel Osorio R, Gabriel Camacho
-Tomas Ospina e Ivan CortÈs
+Tomas Ospina e Ivan Cort√©s
 */
 
 #include "Sistema.h"
@@ -22,7 +22,7 @@ Sistema::Sistema()
     cargarComandos("comandos.txt");
 }
 
-// MÈtodo para cargar comando -- lee los comandos desde el archivo y almacenarlos en un vector
+// M√©todo para cargar comando -- lee los comandos desde el archivo y almacenarlos en un vector
 void Sistema::cargarComandos(const std::string& nombreArchivo)
 {
     std::ifstream archivo(nombreArchivo);
@@ -51,7 +51,7 @@ void Sistema::cargarComandos(const std::string& nombreArchivo)
     archivo.close();
 }
 
-// MÈtodo para procesar comando -- Procesa un comando introducido por consolo por el usuario
+// M√©todo para procesar comando -- Procesa un comando introducido por consolo por el usuario
 void Sistema::procesarComando(const std::string& comando)
 {
     std::istringstream iss(comando);
@@ -133,7 +133,7 @@ void Sistema::procesarComando(const std::string& comando)
         }
         else
         {
-            std::cerr << "\nError: Faltan las coordenadas (px, py, pz) para el vertice m·s cercano.\n" << std::endl;
+            std::cerr << "\nError: Faltan las coordenadas (px, py, pz) para el vertice m√°s cercano.\n" << std::endl;
         }
     }
     else if (nombre == "v_cercanos_caja")
@@ -184,7 +184,7 @@ void Sistema::procesarComando(const std::string& comando)
     }
 }
 
-// MÈtodo para mostrar ayuda de los comandos -- Muestra lista de comandos disponibles y su descripciÛn
+// M√©todo para mostrar ayuda de los comandos -- Muestra lista de comandos disponibles y su descripci√≥n
 void Sistema::mostrarAyuda()
 {
     std::cout << std::left
@@ -206,11 +206,11 @@ void Sistema::mostrarAyuda()
     std::cout << "  1. Si se ingresa con un parametro <nombre_objeto>, calcula la caja envolvente para el objeto especificado y agrega esta caja como un nuevo objeto en memoria con el nombre 'env_nombre_objeto'." << std::endl;
     std::cout << "  2. Si se ingresa sin parametros, calcula la caja envolvente que incluye a todos los objetos cargados en memoria y agrega esta caja como un nuevo objeto en memoria con el nombre 'env_global'." << std::endl;
     std::cout << "\n- El comando 'v_cercano' puede comportarse de dos maneras: " << std::endl;
-    std::cout << "  1. Si se ingresa con las coordenadas <px> <py> <pz> y el nombre del objeto <nombre_objeto>, identifica el vertice m·s cercano de ese objeto especifico al punto dado" << std::endl;
+    std::cout << "  1. Si se ingresa con las coordenadas <px> <py> <pz> y el nombre del objeto <nombre_objeto>, identifica el vertice m√°s cercano de ese objeto especifico al punto dado" << std::endl;
     std::cout << "  2. Si se ingresa solo con las coordenadas `<px> <py> <pz>`, identifica el vertice mas cercano entre todos los objetos cargados en memoria al punto dado.\n" << std::endl;
 }
 
-// MÈtodo para listar comandos -- Lista los nombres de los comandos disponibles
+// M√©todo para listar comandos -- Lista los nombres de los comandos disponibles
 void Sistema::listarComandos()
 {
     std::cout << "\nLista de comandos disponibles: \n" << std::endl;
@@ -221,7 +221,7 @@ void Sistema::listarComandos()
 }
 
 
-// MÈtodo para cargar archivo -- Carga objeto 3D desde un archivo de texto con todas sus caracteristicas
+// M√©todo para cargar archivo -- Carga objeto 3D desde un archivo de texto con todas sus caracteristicas
 void Sistema::cargarArchivo(const std::string& nombreArchivo)
 {
 
@@ -303,7 +303,7 @@ void Sistema::cargarArchivo(const std::string& nombreArchivo)
             archivo >> indiceVertice;
             if (!archivo)
             {
-                std::cout << "Error al leer los Ìndices de una cara en el archivo " << nombreArchivo << "." << std::endl;
+                std::cout << "Error al leer los √≠ndices de una cara en el archivo " << nombreArchivo << "." << std::endl;
                 return;
             }
             nuevaCara.agregarVertice(indiceVertice);
@@ -333,7 +333,7 @@ void Sistema::cargarArchivo(const std::string& nombreArchivo)
     ArbolKD arbolKD(verticesPtr);
 }
 
-// MÈtodo para listar objetos -- Muestra los objetos y su informacion cargados en memoria
+// M√©todo para listar objetos -- Muestra los objetos y su informacion cargados en memoria
 void Sistema::listarObjetos()
 {
     if (gestor.estaVacio())
@@ -346,7 +346,7 @@ void Sistema::listarObjetos()
     }
 }
 
-// MÈtodo para generar el envolvente de un objeto -- Crea el envolvente de un objeto
+// M√©todo para generar el envolvente de un objeto -- Crea el envolvente de un objeto
 void Sistema::generarEnvolvente(const std::string& nombreObjeto)
 {
     int puntos=2;
@@ -359,19 +359,19 @@ void Sistema::generarEnvolvente(const std::string& nombreObjeto)
         return;
     }
 
-    //Obtener los vÈrtices del objeto
+    //Obtener los v√©rtices del objeto
     std::vector<Vertice> vertices = objeto->getVertices();
     if (vertices.empty())
     {
-        std::cout << "El objeto " << nombreObjeto << " no tiene vÈrtices." << std::endl;
+        std::cout << "El objeto " << nombreObjeto << " no tiene v√©rtices." << std::endl;
         return;
     }
 
-    //Inicializar los puntos mÌnimos y m·ximos con el primer vÈrtice
+    //Inicializar los puntos m√≠nimos y m√°ximos con el primer v√©rtice
     Vertice pmin = vertices[0];
     Vertice pmax = vertices[0];
 
-    //Iteraa sobre los vÈrtices para encontrar los lÌmites de la caja envolvente
+    //Iteraa sobre los v√©rtices para encontrar los l√≠mites de la caja envolvente
     for (const auto& vertice : vertices)
     {
         if (vertice.getX() < pmin.getX()) pmin.setX(vertice.getX());
@@ -387,7 +387,7 @@ void Sistema::generarEnvolvente(const std::string& nombreObjeto)
     std::string nombreEnvolvente = "env_" + nombreObjeto;
     Objeto envolvente(nombreEnvolvente);
 
-    //Agregar los puntos mÌnimos y m·ximos como vÈrtices de la envolvente
+    //Agregar los puntos m√≠nimos y m√°ximos como v√©rtices de la envolvente
     envolvente.agregarVertice(pmin.getX(), pmin.getY(), pmin.getZ());
     envolvente.agregarVertice(pmax.getX(), pmax.getY(), pmax.getZ());
     envolvente.agregarPuntosObjeto(puntos);
@@ -396,11 +396,11 @@ void Sistema::generarEnvolvente(const std::string& nombreObjeto)
     gestor.agregarObjeto(envolvente);
     std::cout << "La caja envolvente del objeto " << nombreObjeto << " se ha generado con el nombre " << nombreEnvolvente << " y se ha agregado a los objetos en memoria.\n" << std::endl;
 
-    //VerificaciÛn de los puntos m·ximos y minimos
+    //Verificaci√≥n de los puntos m√°ximos y minimos
     //envolvente.leerVertices();
 }
 
-// MÈtodo para generar el envolvente de todos los objetos -- Crea el envolvente que incluye todos los objetos en memoria
+// M√©todo para generar el envolvente de todos los objetos -- Crea el envolvente que incluye todos los objetos en memoria
 void Sistema::generarEnvolventeGlobal()
 {
     int puntos=2;
@@ -411,14 +411,14 @@ void Sistema::generarEnvolventeGlobal()
         return;
     }
 
-    //Obtiene todos los vÈrtices de todos los objetos en memoria
+    //Obtiene todos los v√©rtices de todos los objetos en memoria
     std::vector<Vertice> vertices = gestor.obtenerTodosLosVertices();
 
-    //Inicializar los puntos mÌnimos y m·ximos con el primer vÈrtice
+    //Inicializar los puntos m√≠nimos y m√°ximos con el primer v√©rtice
     Vertice pmin = vertices[0];
     Vertice pmax = vertices[0];
 
-    //Itera sobre los vÈrtices para encontrar los lÌmites de la caja envolvente global
+    //Itera sobre los v√©rtices para encontrar los l√≠mites de la caja envolvente global
     for (const auto& vertice : vertices)
     {
         if (vertice.getX() < pmin.getX()) pmin.setX(vertice.getX());
@@ -434,7 +434,7 @@ void Sistema::generarEnvolventeGlobal()
     std::string nombreEnvolvente = "env_global";
     Objeto envolvente(nombreEnvolvente);
 
-    //Agregar los puntos mÌnimos y m·ximos como vÈrtices de la envolvente global
+    //Agregar los puntos m√≠nimos y m√°ximos como v√©rtices de la envolvente global
     envolvente.agregarVertice(pmin.getX(), pmin.getY(), pmin.getZ());
     envolvente.agregarVertice(pmax.getX(), pmax.getY(), pmax.getZ());
     envolvente.agregarPuntosObjeto(puntos);
@@ -444,7 +444,7 @@ void Sistema::generarEnvolventeGlobal()
     std::cout << "\nLa caja envolvente de los objetos en memoria se ha generado con el nombre "  << nombreEnvolvente <<" y se ha agregado a los objetos en memoria." << std::endl;
 }
 
-// MÈtodo para eliminar un objeto de sistema -- Elimina un objeto dado su nombre de memoria
+// M√©todo para eliminar un objeto de sistema -- Elimina un objeto dado su nombre de memoria
 void Sistema::descargarObjeto(const std::string& nombreObjeto)
 {
     //Obtener el objeto desde el gestor usando su nombre
@@ -467,7 +467,7 @@ void Sistema::descargarObjeto(const std::string& nombreObjeto)
     }
 }
 
-// MÈtodo para guardar un objeto en un archivo .txt -- Crea un archivo.txt y guarda el objeto con su informaciÛn
+// M√©todo para guardar un objeto en un archivo .txt -- Crea un archivo.txt y guarda el objeto con su informaci√≥n
 void Sistema::guardarObjeto(const std::string& nombreObjeto, const std::string& nombreArchivo)
 {
     //Obtener el objeto desde el gestor usando su nombre
@@ -507,7 +507,7 @@ void Sistema::guardarObjeto(const std::string& nombreObjeto, const std::string& 
     std::cout << "La informacion del objeto " << nombreObjeto << " ha sido guardada exitosamente en el archivo " << nombreArchivo << "." << std::endl;
 }
 
-// MÈtodo para obtener el vertice m·s cercano
+// M√©todo para obtener el vertice m√°s cercano
 void Sistema::verticeMasCercano(float px, float py, float pz, const std::string& nombreObjeto)
 {
     Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
@@ -521,7 +521,7 @@ void Sistema::verticeMasCercano(float px, float py, float pz, const std::string&
 
     if(vertice.empty())
     {
-        std::cout << "(Error) El objeto " << nombreObjeto << " no tiene vÈrtices." << std::endl;
+        std::cout << "(Error) El objeto " << nombreObjeto << " no tiene v√©rtices." << std::endl;
         return;
     }
     Vertice punto(px, py, pz);
@@ -541,24 +541,24 @@ void Sistema::verticeMasCercano(float px, float py, float pz, const std::string&
             int indice = std::distance(vertice.begin(), it);
             std::cout << "El vertice " << indice
                       << " (" << verticeCercano->getX() << ", " << verticeCercano->getY() << ", " << verticeCercano->getZ()
-                      << ") del objeto " << nombreObjeto << " es el m·s cercano al punto ("
+                      << ") del objeto " << nombreObjeto << " es el m√°s cercano al punto ("
                       << px << ", " << py << ", " << pz
                       << "), a una distancia de " << distancia << "." << std::endl;
         }
     }
     else
     {
-        std::cout << "No se encontrÛ un vÈrtice cercano." << std::endl;
+        std::cout << "No se encontr√≥ un v√©rtice cercano." << std::endl;
     }
 
 }
 
-// MÈtodo para obtener el vertice mas cercano global
+// M√©todo para obtener el vertice mas cercano global
 void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
 {
     if (gestor.estaVacio())
     {
-        std::cout << "Ning˙n objeto ha sido cargado en memoria." << std::endl;
+        std::cout << "Ning√∫n objeto ha sido cargado en memoria." << std::endl;
     }
 
     std::vector<Vertice*> todosLosVertices;
@@ -577,7 +577,7 @@ void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
 
     if(todosLosVertices.empty())
     {
-        std::cout << "No hay vÈrtices cargados en ning˙n objeto." << std::endl;
+        std::cout << "No hay v√©rtices cargados en ning√∫n objeto." << std::endl;
         return;
     }
 
@@ -598,7 +598,7 @@ void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
             nombreObjetoCercano = objeto.getNombreMalla();
             int indiceVertice = std::distance(vertices.begin(), it);
 
-            // Mostrar mensaje de Èxito con el vÈrtice m·s cercano
+            // Mostrar mensaje de √©xito con el v√©rtice m√°s cercano
             std::cout << "El vertice " << indiceVertice
                       << " (" << verticeCercano->getX() << ", " << verticeCercano->getY() << ", "
                       << verticeCercano->getZ() << ") del objeto " << nombreObjetoCercano
@@ -614,18 +614,70 @@ void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
     }
 }
 
-// MÈtodo para obtener el vertice mas cercano de la caja
 void Sistema::verticesCercanosCaja(const std::string& nombreObjeto)
 {
+    std::cout << "Intentando buscar el objeto: " << nombreObjeto << std::endl;
     Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
     if (objeto == nullptr)
     {
         std::cout << "El objeto " << nombreObjeto << " no ha sido cargado en memoria." << std::endl;
         return;
     }
+
+    std::vector<Vertice> vertices = objeto->getVertices();
+    std::cout << "Se obtuvieron " << vertices.size() << " vertices." << std::endl;
+    if (vertices.empty())
+    {
+        std::cout << "El objeto " << nombreObjeto << " no tiene vertices." << std::endl;
+        return;
+    }
+
+    float xMin, yMin, zMin, xMax, yMax, zMax;
+    std::cout << "Ingrese las coordenadas de la caja:\n";
+    std::cout << "Punto minimo (xMin, yMin, zMin): ";
+    std::cin >> xMin >> yMin >> zMin;
+    std::cout << "Punto maximo (xMax, yMax, zMax): ";
+    std::cin >> xMax >> yMax >> zMax;
+
+    std::cout << "Punto minimo: (" << xMin << ", " << yMin << ", " << zMin << ")" << std::endl;
+    std::cout << "Punto maximo: (" << xMax << ", " << yMax << ", " << zMax << ")" << std::endl;
+
+    std::vector<Vertice> verticesDentroCaja;
+
+    for (const auto& vertice : vertices)
+    {
+        std::cout << "Verificando vertice: (" << vertice.getX() << ", " << vertice.getY() << ", " << vertice.getZ() << ")" << std::endl;
+        if (vertice.getX() >= xMin && vertice.getX() <= xMax &&
+            vertice.getY() >= yMin && vertice.getY() <= yMax &&
+            vertice.getZ() >= zMin && vertice.getZ() <= zMax)
+        {
+            verticesDentroCaja.push_back(vertice);
+            std::cout << "Vertice dentro de la caja: (" << vertice.getX() << ", " << vertice.getY() << ", " << vertice.getZ() << ")" << std::endl;
+        }
+    }
+
+    if (verticesDentroCaja.empty())
+    {
+        std::cout << "No se encontraron vertices dentro de la caja." << std::endl;
+    }
+    else
+    {
+        std::cout << "Vertices encontrados dentro de la caja:\n";
+        std::cout << "--------------------------------------------------" << std::endl;
+        for (size_t i = 0; i < verticesDentroCaja.size(); ++i)
+        {
+            const auto& vertice = verticesDentroCaja[i];
+            std::cout << "Vertice " << i + 1 << ": ("
+                      << vertice.getX() << ", "
+                      << vertice.getY() << ", "
+                      << vertice.getZ() << ")\n";
+        }
+        std::cout << "--------------------------------------------------" << std::endl;
+    }
 }
 
-// MÈtodo para encontrar la ruta corta de un objeto
+
+// M√©todo para encontrar la ruta corta de un objeto
 void Sistema::rutaCorta(int i1, int i2, const std::string& nombreObjeto)
 {
     Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
@@ -636,7 +688,7 @@ void Sistema::rutaCorta(int i1, int i2, const std::string& nombreObjeto)
     }
 }
 
-// MÈtodo para encontrar la ruta corta al cento del objeto
+// M√©todo para encontrar la ruta corta al cento del objeto
 void Sistema::rutaCortaCentro(int i1, const std::string& nombreObjeto)
 {
     Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
@@ -647,10 +699,9 @@ void Sistema::rutaCortaCentro(int i1, const std::string& nombreObjeto)
     }
 }
 
-// MÈtodo para borrar pantalla
+// M√©todo para borrar pantalla
 void Sistema::borrarPantalla()
 {
 
     system("cls");
 }
-
