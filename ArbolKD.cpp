@@ -131,5 +131,5 @@ float ArbolKD::distanciaEuclidiana(const Vertice& v1, const Vertice& v2)
     float dx = v1.getX() - v2.getX();
     float dy = v1.getY() - v2.getY();
     float dz = v1.getZ() - v2.getZ();
-    return sqrt(dx * dx + dy * dy + dz * dz);
+    return sqrt((dx * dx) + (dy * dy) + (dz * dz));
 }

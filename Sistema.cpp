@@ -9,6 +9,7 @@ Tomas Ospina e Ivan Cortés
 #include "GestorObjetos.h"
 #include "Comando.h"
 #include "ArbolKD.h"
+#include <cmath>
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -521,7 +522,7 @@ void Sistema::verticeMasCercano(float px, float py, float pz, const std::string&
 
     if(vertice.empty())
     {
-        std::cout << "(Error) El objeto " << nombreObjeto << " no tiene vértices." << std::endl;
+        std::cout << "El objeto " << nombreObjeto << " no tiene vértices." << std::endl;
         return;
     }
     Vertice punto(px, py, pz);
@@ -541,14 +542,14 @@ void Sistema::verticeMasCercano(float px, float py, float pz, const std::string&
             int indice = std::distance(vertice.begin(), it);
             std::cout << "El vertice " << indice
                       << " (" << verticeCercano->getX() << ", " << verticeCercano->getY() << ", " << verticeCercano->getZ()
-                      << ") del objeto " << nombreObjeto << " es el más cercano al punto ("
+                      << ") del objeto " << nombreObjeto << " es el mss cercano al punto ("
                       << px << ", " << py << ", " << pz
                       << "), a una distancia de " << distancia << "." << std::endl;
         }
     }
     else
     {
-        std::cout << "No se encontró un vértice cercano." << std::endl;
+        std::cout << "No se encontro un vertice cercano." << std::endl;
     }
 
 }
@@ -558,7 +559,7 @@ void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
 {
     if (gestor.estaVacio())
     {
-        std::cout << "Ningún objeto ha sido cargado en memoria." << std::endl;
+        std::cout << "Ningun objeto ha sido cargado en memoria." << std::endl;
     }
 
     std::vector<Vertice*> todosLosVertices;
@@ -577,7 +578,7 @@ void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
 
     if(todosLosVertices.empty())
     {
-        std::cout << "No hay vértices cargados en ningún objeto." << std::endl;
+        std::cout << "No hay vertices cargados en ningún objeto." << std::endl;
         return;
     }
 
@@ -610,7 +611,12 @@ void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
 
     for (auto vertice : todosLosVertices)
     {
-        delete void Sistema::verticesCercanosCaja(const std::string& nombreObjeto)
+        delete vertice;
+    }
+}
+
+// Método para obtener el vertice mas cercano de la caja
+void Sistema::verticesCercanosCaja(const std::string& nombreObjeto)
 {
     // Obtener el objeto desde el gestor usando su nombre
     Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
@@ -664,34 +670,42 @@ void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
         return;
     }
 
+    std::cout << "Los vertices del objeto " << nombreObjeto << " mas cercanos a las esquinas de su caja envolvente son:\n";
+    std::cout << "Esquina         Vertice        Distancia\n";
+
     // Iterar sobre los vértices del objeto original para encontrar el vértice más cercano en la envolvente
+    int contadorEsquina = 0;
     for (const auto& vertice : vertices)
     {
         Vertice* verticeCercano = nullptr;
         float distanciaMinima = std::numeric_limits<float>::max();
+        int indiceCercano = -1;
 
-        for (const auto& verticeEnv : verticesEnvolvente)
+        for (int i = 0; i < verticesEnvolvente.size(); i++)
         {
-            float distancia = sqrt(pow(vertice.getX() - verticeEnv.getX(), 2) +
-                                   pow(vertice.getY() - verticeEnv.getY(), 2) +
-                                   pow(vertice.getZ() - verticeEnv.getZ(), 2));
+            float dx = vertice.getX() - verticesEnvolvente[i].getX();
+            float dy = vertice.getY() - verticesEnvolvente[i].getY();
+            float dz = vertice.getZ() - verticesEnvolvente[i].getZ();
+            float distancia = sqrt((dx * dx) + (dy * dy) + (dz * dz));
+
 
             if (distancia < distanciaMinima)
             {
                 distanciaMinima = distancia;
-                verticeCercano = new Vertice(verticeEnv);
+                verticeCercano = &verticesEnvolvente[i];
+                indiceCercano = i;
             }
         }
 
         if (verticeCercano != nullptr)
         {
-            std::cout << "El vértice del objeto (" << vertice.getX() << ", " << vertice.getY() << ", " << vertice.getZ()
-                      << ") tiene el vértice más cercano en la envolvente en ("
-                      << verticeCercano->getX() << ", " << verticeCercano->getY() << ", " << verticeCercano->getZ()
-                      << ") con una distancia de " << distanciaMinima << "." << std::endl;
+            std::cout << contadorEsquina + 1 << " (" << verticeCercano->getX() << ", " << verticeCercano->getY()<< ", " << verticeCercano->getZ()
+                      << ")     " << indiceCercano << " (" << vertice.getX() << ", " << vertice.getY()
+                      << ", " << vertice.getZ()<< ")     " << distanciaMinima << "\n";
 
-            delete verticeCercano; // Liberar memoria
+            //delete verticeCercano; // Liberar memoria
         }
+        contadorEsquina++;
     }
 }
 
