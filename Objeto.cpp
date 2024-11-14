@@ -103,6 +103,7 @@ void Objeto::leerVertices() const
     }
 }
 
+//Metodo para obtener una lista de punteros de vertices
 std::vector<Vertice*> Objeto::getVerticePtr()
 {
     std::vector<Vertice*> verticesPtr;
