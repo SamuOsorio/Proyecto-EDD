@@ -16,6 +16,8 @@ Tomas Ospina e Ivan Cortés
 #include <sstream>
 #include <iomanip>
 #include <set>
+#include <queue>
+#include <unordered_map>
 
 // Constructor
 Sistema::Sistema()
@@ -264,8 +266,6 @@ void Sistema::cargarArchivo(const std::string& nombreArchivo)
     // Crea la instancia de un nuevo Objeto
     Objeto nuevoObjeto(meshName);
 
-    std::vector<Vertice*> verticesPtr;
-
     //Agrega los vertices del objeto
     for(int i=0; i< numVertice; i++)
     {
@@ -277,10 +277,8 @@ void Sistema::cargarArchivo(const std::string& nombreArchivo)
             return;
         }
 
-        Vertice* nuevoVertice = new Vertice(x,y,z);
-        nuevoObjeto.agregarVertice(*nuevoVertice);
+        nuevoObjeto.agregarVertice(x,y,z);
 
-        verticesPtr.push_back(nuevoVertice);
     }
 
     //Agrega las caras del objeto y sus indices
@@ -331,7 +329,7 @@ void Sistema::cargarArchivo(const std::string& nombreArchivo)
         std::cerr << "Error: El objeto " << meshName << " no se pudo cargar. "<< std::endl;
     }
 
-    ArbolKD arbolKD(verticesPtr);
+    ArbolKD arbolKD(nuevoObjeto.getVertices());
 }
 
 // Método para listar objetos -- Muestra los objetos y su informacion cargados en memoria
@@ -525,8 +523,12 @@ void Sistema::verticeMasCercano(float px, float py, float pz, const std::string&
         std::cout << "El objeto " << nombreObjeto << " no tiene vértices." << std::endl;
         return;
     }
+
+    const std::vector<Vertice>& vertices = objeto->getVertices();
+    std::vector<Vertice> copiaVertices(vertices.begin(), vertices.end());
+
     Vertice punto(px, py, pz);
-    ArbolKD arbol(vertice);
+    ArbolKD arbol(copiaVertices);
     Vertice* verticeCercano = arbol.VerticeMasCercano(punto,nombreObjeto);
 
     if (verticeCercano != nullptr)
@@ -562,40 +564,38 @@ void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
         std::cout << "Ningun objeto ha sido cargado en memoria." << std::endl;
     }
 
-    std::vector<Vertice*> todosLosVertices;
+    std::vector<Vertice> todosLosVertices;
     std::vector<Objeto> objetos = gestor.obtenerObjetos();
     std::string nombreObjetoCercano;
-    Vertice* verticeCercano = nullptr;
 
-    for(const auto& objeto : objetos)
+    for (const auto& objeto : objetos)
     {
         const std::vector<Vertice>& vertices = objeto.getVertices();
-        for(const auto& vertice : vertices)
-        {
-            todosLosVertices.push_back(new Vertice(vertice));
-        }
+        todosLosVertices.insert(todosLosVertices.end(), vertices.begin(), vertices.end());
     }
-
     if(todosLosVertices.empty())
     {
         std::cout << "No hay vertices cargados en ningún objeto." << std::endl;
         return;
     }
 
-    Vertice punto(px,py,pz);
-    ArbolKD arbol(todosLosVertices);
+    Vertice punto(px, py, pz);
+    ArbolKD arbol(todosLosVertices);  // Usar el vector de vértices copiados en lugar de punteros
+    Vertice* verticeCercano = arbol.VerticeMasCercano(punto, "global");
 
-    verticeCercano = arbol.VerticeMasCercano(punto, "global");
     float distancia = arbol.distanciaEuclidiana(punto, *verticeCercano);
-    for (const auto& objeto : objetos) {
+    for (const auto& objeto : objetos)
+    {
         const std::vector<Vertice>& vertices = objeto.getVertices();
-        auto it = std::find_if(vertices.begin(), vertices.end(), [&](const Vertice& v) {
+        auto it = std::find_if(vertices.begin(), vertices.end(), [&](const Vertice& v)
+        {
             return v.getX() == verticeCercano->getX() &&
                    v.getY() == verticeCercano->getY() &&
                    v.getZ() == verticeCercano->getZ();
         });
 
-        if (it != vertices.end()) {
+        if (it != vertices.end())
+        {
             nombreObjetoCercano = objeto.getNombreMalla();
             int indiceVertice = std::distance(vertices.begin(), it);
 
@@ -611,7 +611,7 @@ void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
 
     for (auto vertice : todosLosVertices)
     {
-        delete vertice;
+        delete &vertice;
     }
 }
 
@@ -630,7 +630,7 @@ void Sistema::verticesCercanosCaja(const std::string& nombreObjeto)
     std::vector<Vertice> vertices = objeto->getVertices();
     if (vertices.empty())
     {
-        std::cout << "El objeto " << nombreObjeto << " no tiene vértices." << std::endl;
+        std::cout << "El objeto " << nombreObjeto << " no tiene vertices." << std::endl;
         return;
     }
 
@@ -710,26 +710,242 @@ void Sistema::verticesCercanosCaja(const std::string& nombreObjeto)
 }
 
 
-
 // Método para encontrar la ruta corta de un objeto
 void Sistema::rutaCorta(int i1, int i2, const std::string& nombreObjeto)
 {
     Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
     if (objeto == nullptr)
     {
-        std::cout << "El objeto " << nombreObjeto << " no ha sido cargado en memoria." << std::endl;
+        std::cout << "El objeto " << nombreObjeto
+                  << " no ha sido cargado en memoria." << std::endl;
         return;
     }
+
+    int numVertices = objeto->getCantidadVertices();
+
+    // Validaciones iniciales
+    if (i1 == i2)
+    {
+        std::cout << "Los indices de los vertices dados son iguales."
+                  << std::endl;
+        return;
+    }
+
+    if (i1 < 0 || i1 >= numVertices || i2 < 0 || i2 >= numVertices)
+    {
+        std::cout << "Algunos de los indices de vertices estan fuera de rango para el objeto "
+                  << nombreObjeto << "." << std::endl;
+        return;
+    }
+
+    // Estructuras para Dijkstra
+    std::vector<float> distancias(numVertices, std::numeric_limits<float>::max());
+    std::vector<int> predecesor(numVertices, -1);
+    std::vector<bool> visitado(numVertices, false);
+    distancias[i1] = 0;
+
+    // Cola de prioridad
+    using Nodo = std::pair<float, int>;
+    std::priority_queue<Nodo, std::vector<Nodo>, std::greater<Nodo>> cola;
+    cola.push({0, i1});
+
+    const std::vector<Arista>& aristas = objeto->getAristas();
+
+    // Algoritmo de Dijkstra
+    while (!cola.empty())
+    {
+        int u = cola.top().second;
+        cola.pop();
+
+        if (visitado[u]) continue;
+        visitado[u] = true;
+
+        if (u == i2) break;
+
+        for (const auto& arista : aristas)
+        {
+            int v1_index = arista.getIndiceV1();
+            int v2_index = arista.getIndiceV2();
+
+            // Validar índices
+            if (v1_index < 0 || v1_index >= numVertices ||
+                    v2_index < 0 || v2_index >= numVertices)
+            {
+                continue;
+            }
+
+            // Determinar el vértice destino
+            int v = -1;
+            if (v1_index == u) v = v2_index;
+            else if (v2_index == u) v = v1_index;
+            else continue;
+
+            if (visitado[v]) continue;
+
+            const Vertice& v1 = objeto->getVertices()[v1_index];
+            const Vertice& v2 = objeto->getVertices()[v2_index];
+            float distanciaUV = Objeto::distanciaEuclidiana(v1, v2);
+            float nuevaDistancia = distancias[u] + distanciaUV;
+
+            if (nuevaDistancia < distancias[v])
+            {
+                distancias[v] = nuevaDistancia;
+                predecesor[v] = u;
+                cola.push({distancias[v], v});
+            }
+        }
+    }
+
+    // Verificar si se encontró una ruta
+    if (distancias[i2] == std::numeric_limits<float>::max())
+    {
+        std::cout << "No se encontro una ruta entre los vertices "
+                  << i1 << " y " << i2 << " en el objeto " << nombreObjeto
+                  << "." << std::endl;
+        return;
+    }
+
+    // Reconstruir la ruta
+    std::vector<int> ruta;
+    for (int v = i2; v != -1; v = predecesor[v])
+    {
+        ruta.push_back(v);
+    }
+    std::reverse(ruta.begin(), ruta.end());
+
+    // Mostrar resultado
+    std::cout << "La ruta mas corta que conecta los vertices "
+              << i1 << " y " << i2 << " del objeto " << nombreObjeto << " pasa por: ";
+    for (size_t i = 0; i < ruta.size(); ++i)
+    {
+        std::cout << ruta[i];
+        if (i != ruta.size() - 1) std::cout << " , ";
+    }
+    std::cout << "; con una longitud de " << std::fixed << std::setprecision(2)
+              << distancias[i2] << "." << std::endl;
 }
 
 // Método para encontrar la ruta corta al cento del objeto
 void Sistema::rutaCortaCentro(int i1, const std::string& nombreObjeto)
 {
+    // Verificar existencia del objeto
     Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
     if (objeto == nullptr)
     {
-        std::cout << "El objeto " << nombreObjeto << " no ha sido cargado en memoria." << std::endl;
+        std::cout << "El objeto " << nombreObjeto
+                  << " no ha sido cargado en memoria." << std::endl;
         return;
+    }
+
+    int numVertices = objeto->getCantidadVertices();
+
+    // Validar índice de entrada
+    if (i1 < 0 || i1 >= numVertices)
+    {
+        std::cout << "El indice de vertice esta fuera de rango para el objeto "
+                  << nombreObjeto << "." << std::endl;
+        return;
+    }
+
+    try
+    {
+        // Calcular el centroide
+        Vertice centroide = objeto->calcularCentroide();
+
+        // Encontrar el vértice más cercano al centroide
+        int indiceCercano = objeto->encontrarVerticeMasCercano(centroide);
+
+        // Agregar temporalmente el centroide como un nuevo vértice
+        int indiceCentroide = objeto->getCantidadVertices();
+        objeto->agregarVertice(centroide.getX(), centroide.getY(), centroide.getZ());
+
+        // Crear una arista temporal entre el centroide y el vértice más cercano
+        Arista aristaTemporal(indiceCercano, indiceCentroide);
+        objeto->agregarArista(aristaTemporal);
+
+        // Estructuras para Dijkstra
+        std::vector<float> distancias(numVertices + 1, std::numeric_limits<float>::max());
+        std::vector<int> predecesor(numVertices + 1, -1);
+        std::vector<bool> visitado(numVertices + 1, false);
+        distancias[i1] = 0;
+
+        // Cola de prioridad
+        using Nodo = std::pair<float, int>;
+        std::priority_queue<Nodo, std::vector<Nodo>, std::greater<Nodo>> cola;
+        cola.push({0, i1});
+
+        // Ejecutar Dijkstra
+        while (!cola.empty())
+        {
+            int u = cola.top().second;
+            cola.pop();
+
+            if (visitado[u]) continue;
+            visitado[u] = true;
+
+            if (u == indiceCentroide) break;
+
+            for (const auto& arista : objeto->getAristas())
+            {
+                int v1_index = arista.getIndiceV1();
+                int v2_index = arista.getIndiceV2();
+
+                int v = (v1_index == u) ? v2_index : (v2_index == u ? v1_index : -1);
+                if (v == -1 || visitado[v]) continue;
+
+                float distanciaUV = Objeto::distanciaEuclidiana(
+                                        objeto->getVertices()[v1_index],
+                                        objeto->getVertices()[v2_index]
+                                    );
+                float nuevaDistancia = distancias[u] + distanciaUV;
+
+                if (nuevaDistancia < distancias[v])
+                {
+                    distancias[v] = nuevaDistancia;
+                    predecesor[v] = u;
+                    cola.push({distancias[v], v});
+                }
+            }
+        }
+
+        // Reconstruir la ruta
+        std::vector<int> ruta;
+        for (int v = indiceCentroide; v != -1; v = predecesor[v])
+        {
+            ruta.push_back(v);
+        }
+        std::reverse(ruta.begin(), ruta.end());
+
+        // Mostrar resultado
+        std::cout << "La ruta mas corta que conecta el vertice "
+                  << i1 << " con el centro del objeto " << nombreObjeto
+                  << ", ubicado en ct (" << centroide.getX() << ", "
+                  << centroide.getY() << ", " << centroide.getZ() << "), pasa por: ";
+
+        for (size_t i = 0; i < ruta.size(); ++i)
+        {
+            if (ruta[i] == indiceCentroide)
+            {
+                std::cout << "ct";
+            }
+            else
+            {
+                std::cout << ruta[i];
+            }
+            if (i != ruta.size() - 1) std::cout << " , ";
+        }
+
+        std::cout << "; con una longitud de " << std::fixed << std::setprecision(2)
+                  << distancias[indiceCentroide] << "." << std::endl;
+
+        // Eliminar el vértice y arista temporal
+        objeto->eliminarVertice(indiceCentroide);
+        objeto->eliminarArista(aristaTemporal);
+
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error al calcular la ruta: " << e.what() << std::endl;
     }
 }
 

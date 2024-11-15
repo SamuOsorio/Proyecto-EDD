@@ -8,7 +8,11 @@ Tomas Ospina e Ivan Cortés
 #include <iostream>
 
 // Constructor
-Vertice::Vertice(float x, float y, float z) : x(x), y(y), z(z){}
+Vertice::Vertice(float x, float y, float z, int index) : x(x), y(y), z(z), index(index){}
+
+// Constructor sin índice
+Vertice::Vertice(float x, float y, float z) : x(x), y(y), z(z) {}
+
 
 // Método para obtener eje x
 float Vertice::getX() const
@@ -26,6 +30,11 @@ float Vertice::getY() const
 float Vertice::getZ() const
 {
     return z;
+}
+
+int Vertice::getIndex() const
+{
+    return index;
 }
 
 // Método para asignar eje x

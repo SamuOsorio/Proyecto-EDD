@@ -10,9 +10,16 @@ Tomas Ospina e Ivan Cortés
 #include <iostream>
 
 // Constructor
-ArbolKD::ArbolKD(const std::vector<Vertice*>& vertices)
+ArbolKD::ArbolKD(const std::vector<Vertice>& vertices)
 {
-    raiz = construirArbol(const_cast<std::vector<Vertice*>&>(vertices), 0);
+    // Crear una copia de los punteros a los vértices en el árbol KD
+    std::vector<Vertice*> verticePtrs;
+    for (const auto& vertice : vertices)
+    {
+        verticePtrs.push_back(const_cast<Vertice*>(&vertice));
+    }
+
+    raiz = construirArbol(verticePtrs, 0);
 }
 
 ArbolKD::~ArbolKD()

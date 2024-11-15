@@ -15,7 +15,7 @@ Tomas Ospina e Ivan Cortés
 class ArbolKD
 {
 public:
-    ArbolKD(const std::vector<Vertice*>& vertices);
+    ArbolKD(const std::vector<Vertice>& vertices);
     ~ArbolKD();
     Vertice* VerticeMasCercano(const Vertice& punto,const std::string& nombreObjeto);
 	float distanciaEuclidiana(const Vertice& v1, const Vertice& v2);

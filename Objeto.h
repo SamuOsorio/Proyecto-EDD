@@ -18,6 +18,7 @@ class Objeto
 {
 public:
     Objeto(const std::string& nombre);
+    void agregarArista(const Arista& arista);
     void agregarVertice(float x, float y, float z);
     void agregarVertice(const Vertice& vertice);
     void agregarPuntosObjeto(int puntos);
@@ -29,11 +30,17 @@ public:
     int getCantidadVertices() const;
     int getCantidadCaras() const;
     int getCantidadAristas() const;
+    void eliminarVertice(int indice);
+    void eliminarArista(const Arista& arista);
     void leerVertices() const;
     const std::vector<Vertice>& getVertices() const;
     const std::vector<Cara>& getCaras() const;
+    const std::vector<Arista>& getAristas() const;
     void calcularAristas();
     std::vector<Vertice*> getVerticePtr();
+    static float distanciaEuclidiana(const Vertice& v1, const Vertice& v2);
+    Vertice calcularCentroide() const;
+    int encontrarVerticeMasCercano(const Vertice& punto) const;
 
 
 private:

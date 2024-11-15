@@ -15,14 +15,16 @@ Tomas Ospina e Ivan Cortés
 class Arista
 {
 public:
-    Arista(Vertice* v1, Vertice* v2);
-    Vertice* getV1() const;
-    Vertice* getV2() const;
+    Arista(int V1index, int V2Index);
+    int getIndiceV1() const;
+    int getIndiceV2() const;
     void mostrarArista() const;
 
 private:
     Vertice* v1;
     Vertice* v2;
+    int indiceV1;
+    int indiceV2;
 };
 
 #endif // ARISTA_H
