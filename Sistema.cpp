@@ -329,7 +329,8 @@ void Sistema::cargarArchivo(const std::string& nombreArchivo)
         std::cerr << "Error: El objeto " << meshName << " no se pudo cargar. "<< std::endl;
     }
 
-    ArbolKD arbolKD(nuevoObjeto.getVertices());
+    ArbolKD* nuevoArbol = new ArbolKD(nuevoObjeto.getVertices());
+    arbolesKD[nuevoObjeto.getNombreMalla()] = nuevoArbol;
 }
 
 // Método para listar objetos -- Muestra los objetos y su informacion cargados en memoria
@@ -516,44 +517,53 @@ void Sistema::verticeMasCercano(float px, float py, float pz, const std::string&
         return;
     }
 
-    std::vector<Vertice*> vertice = objeto->getVerticePtr();
-
-    if(vertice.empty())
-    {
-        std::cout << "El objeto " << nombreObjeto << " no tiene vértices." << std::endl;
+    // Verificar si existe el árbol KD asociado al objeto
+    auto it = arbolesKD.find(nombreObjeto);
+    if (it == arbolesKD.end()) {
+        std::cerr << "El árbol KD para el objeto " << nombreObjeto << " no existe." << std::endl;
         return;
     }
 
-    const std::vector<Vertice>& vertices = objeto->getVertices();
-    std::vector<Vertice> copiaVertices(vertices.begin(), vertices.end());
-
+    // Crear el punto de búsqueda
     Vertice punto(px, py, pz);
-    ArbolKD arbol(copiaVertices);
-    Vertice* verticeCercano = arbol.VerticeMasCercano(punto,nombreObjeto);
 
-    if (verticeCercano != nullptr)
-    {
-        float distancia = arbol.distanciaEuclidiana(punto, *verticeCercano);
-        auto it = std::find_if(vertice.begin(), vertice.end(),
-                               [verticeCercano](const Vertice* v)
-        {
-            return v == verticeCercano;
+    // Obtener el árbol KD y buscar el vértice más cercano
+    ArbolKD* arbol = it->second;
+    Vertice* verticeCercano = arbol->VerticeMasCercano(punto, nombreObjeto);
+
+    if (verticeCercano != nullptr) {
+        // Obtener la distancia
+        float distancia = arbol->distanciaEuclidiana(punto, *verticeCercano);
+
+        // Verificar si el vértice se encuentra en los datos del objeto
+        Objeto* objeto = gestor.obtenerObjeto(nombreObjeto);
+        if (objeto == nullptr) {
+            std::cerr << "El objeto " << nombreObjeto << " no existe en memoria." << std::endl;
+            return;
+        }
+
+        // Encontrar el índice del vértice en el vector de vértices del objeto
+        const std::vector<Vertice>& vertices = objeto->getVertices();
+        auto itVertice = std::find_if(vertices.begin(), vertices.end(), [&](const Vertice& v) {
+            return v.getX() == verticeCercano->getX() &&
+                   v.getY() == verticeCercano->getY() &&
+                   v.getZ() == verticeCercano->getZ();
         });
-        if (it != vertice.end())
-        {
-            int indice = std::distance(vertice.begin(), it);
+
+        if (itVertice != vertices.end()) {
+            int indice = std::distance(vertices.begin(), itVertice);
+            // Mostrar el mensaje correcto
             std::cout << "El vertice " << indice
                       << " (" << verticeCercano->getX() << ", " << verticeCercano->getY() << ", " << verticeCercano->getZ()
-                      << ") del objeto " << nombreObjeto << " es el mss cercano al punto ("
+                      << ") del objeto " << nombreObjeto << " es el mas cercano al punto ("
                       << px << ", " << py << ", " << pz
                       << "), a una distancia de " << distancia << "." << std::endl;
+        } else {
+            std::cerr << "No se encontró el índice del vértice más cercano en el objeto " << nombreObjeto << "." << std::endl;
         }
+    } else {
+        std::cerr << "No se encontró un vértice cercano en el objeto " << nombreObjeto << "." << std::endl;
     }
-    else
-    {
-        std::cout << "No se encontro un vertice cercano." << std::endl;
-    }
-
 }
 
 // Método para obtener el vertice mas cercano global
@@ -564,54 +574,46 @@ void Sistema::verticeMasCercanoGlobal(float px, float py, float pz)
         std::cout << "Ningun objeto ha sido cargado en memoria." << std::endl;
     }
 
-    std::vector<Vertice> todosLosVertices;
-    std::vector<Objeto> objetos = gestor.obtenerObjetos();
-    std::string nombreObjetoCercano;
-
-    for (const auto& objeto : objetos)
+    if (arbolesKD.empty())
     {
-        const std::vector<Vertice>& vertices = objeto.getVertices();
-        todosLosVertices.insert(todosLosVertices.end(), vertices.begin(), vertices.end());
-    }
-    if(todosLosVertices.empty())
-    {
-        std::cout << "No hay vertices cargados en ningún objeto." << std::endl;
+        std::cout << "No hay árboles KD cargados." << std::endl;
         return;
     }
 
     Vertice punto(px, py, pz);
-    ArbolKD arbol(todosLosVertices);  // Usar el vector de vértices copiados en lugar de punteros
-    Vertice* verticeCercano = arbol.VerticeMasCercano(punto, "global");
+    Vertice* mejorVertice = nullptr;
+    float mejorDistancia = std::numeric_limits<float>::max();
+    std::string nombreObjetoCercano;
+    int indiceVertice = -1;
 
-    float distancia = arbol.distanciaEuclidiana(punto, *verticeCercano);
-    for (const auto& objeto : objetos)
+    for (auto& par : arbolesKD)
     {
-        const std::vector<Vertice>& vertices = objeto.getVertices();
-        auto it = std::find_if(vertices.begin(), vertices.end(), [&](const Vertice& v)
+        ArbolKD* arbol = par.second;
+        Vertice* verticeCercano = arbol->VerticeMasCercano(punto, par.first);
+        if (verticeCercano != nullptr)
         {
-            return v.getX() == verticeCercano->getX() &&
-                   v.getY() == verticeCercano->getY() &&
-                   v.getZ() == verticeCercano->getZ();
-        });
-
-        if (it != vertices.end())
-        {
-            nombreObjetoCercano = objeto.getNombreMalla();
-            int indiceVertice = std::distance(vertices.begin(), it);
-
-            // Mostrar mensaje de éxito con el vértice más cercano
-            std::cout << "El vertice " << indiceVertice
-                      << " (" << verticeCercano->getX() << ", " << verticeCercano->getY() << ", "
-                      << verticeCercano->getZ() << ") del objeto " << nombreObjetoCercano
-                      << " es el mas cercano al punto (" << px << ", " << py << ", " << pz
-                      << "), a una distancia de " << distancia << "." << std::endl;
-            break;
+            float distancia = arbol->distanciaEuclidiana(punto, *verticeCercano);
+            if (distancia < mejorDistancia)
+            {
+                mejorDistancia = distancia;
+                mejorVertice = verticeCercano;
+                nombreObjetoCercano = par.first;
+                indiceVertice = verticeCercano->getIndex();
+            }
         }
     }
 
-    for (auto vertice : todosLosVertices)
+    if (mejorVertice != nullptr)
     {
-        delete &vertice;
+        std::cout << "El vertice " << indiceVertice
+                  << " (" << mejorVertice->getX() << ", " << mejorVertice->getY() << ", "
+                  << mejorVertice->getZ() << ") del objeto " << nombreObjetoCercano
+                  << " es el mas cercano al punto (" << px << ", " << py << ", " << pz
+                  << "), a una distancia de " << mejorDistancia << "." << std::endl;
+    }
+    else
+    {
+        std::cout << "No se encontraron vértices cercanos." << std::endl;
     }
 }
 

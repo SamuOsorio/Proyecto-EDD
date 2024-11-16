@@ -8,10 +8,12 @@ Tomas Ospina e Ivan Cortés
 #define SISTEMA_H
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "Objeto.h"
 #include "Comando.h"
 #include "GestorObjetos.h"
+#include "ArbolKD.h"
 
 //Definición de atributos y métodos de Sistema
 class Sistema {
@@ -40,7 +42,7 @@ private:
     std::vector<Comando> comandos;
     std::vector<std::string> nombresObjetos;
     GestorObjetos gestor;
-
+    std::unordered_map<std::string, ArbolKD*> arbolesKD;
 };
 
 #endif
